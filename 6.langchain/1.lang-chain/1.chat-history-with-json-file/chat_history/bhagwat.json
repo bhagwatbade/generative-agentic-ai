@@ -1,0 +1,137 @@
+[
+  {
+    "type": "human",
+    "data": {
+      "content": "what do you know about me",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "type": "human",
+      "name": null,
+      "id": null
+    }
+  },
+  {
+    "type": "ai",
+    "data": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Hello Bhagwat! \n\nI know that your name is Bhagwat, and you are chatting with me today. \n\nSince I value your privacy and want to keep things simple, I don't store personal details about you from past chats unless you tell me right now. \n\nIs there anything specific you would like to tell me about yourself, Bhagwat, or how can I help you today?",
+          "extras": {
+            "signature": "EmAKXgFpFH0TPKaCXzUiSHd8oyAe1N9w+kQCMGvlCBh72McMXaz+Wq4dSuzVgiUa7JNFrS6/yFEOHJfAr1QSMD9GPNHmjeevkX26wjj8Gr6n/ZbCMZdPC5++iQ5o5uwJ4KA="
+          }
+        }
+      ],
+      "additional_kwargs": {},
+      "response_metadata": {
+        "finish_reason": "STOP",
+        "model_name": "gemini-3.5-flash-lite",
+        "safety_ratings": [],
+        "model_provider": "google_genai"
+      },
+      "type": "ai",
+      "name": null,
+      "id": "lc_run--01a130eb-9f8d-7362-aea8-5f54d5e7c7cb-0",
+      "tool_calls": [],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 29,
+        "output_tokens": 82,
+        "total_tokens": 111,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      }
+    }
+  },
+  {
+    "type": "human",
+    "data": {
+      "content": "what do you know about me",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "type": "human",
+      "name": null,
+      "id": null
+    }
+  },
+  {
+    "type": "ai",
+    "data": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Hello again, Bhagwat! \n\nAs I mentioned just a moment ago, I only know that your name is Bhagwat because you told me, and that we are talking right now. \n\nI don't collect or remember personal details about you beyond this current conversation. If you would like to share more about yourself\u2014like your hobbies, what you do, or what you are interested in\u2014I would be happy to listen and chat with you about it!",
+          "extras": {
+            "signature": "EmAKXgFpFH0TRitSNfp1L2OcalrvbcHOpqWHm7P79i9HGo6NbuaSzErk1SRe2eW7Z0DK1AfJbuR7BHGaCwB3JLrSqYv3Jsba1k8KuVP2Wn5QbCG5jkIIPE5PkcpV9jI5zsk="
+          }
+        }
+      ],
+      "additional_kwargs": {},
+      "response_metadata": {
+        "finish_reason": "STOP",
+        "model_name": "gemini-3.5-flash-lite",
+        "safety_ratings": [],
+        "model_provider": "google_genai"
+      },
+      "type": "ai",
+      "name": null,
+      "id": "lc_run--01a130ec-49f8-7a52-a41d-bc14793b8c55-0",
+      "tool_calls": [],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 119,
+        "output_tokens": 94,
+        "total_tokens": 213,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      }
+    }
+  },
+  {
+    "type": "human",
+    "data": {
+      "content": "what do you know about me",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "type": "human",
+      "name": null,
+      "id": null
+    }
+  },
+  {
+    "type": "ai",
+    "data": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Hi Bhagwat! \n\nLike I said before, I only know your name is Bhagwat because you told me. I don't know anything else about you. \n\nEvery time we start a new chat, I start fresh. If you want me to know more about you, you can tell me things like your favorite food, what you do for fun, or why you are here today!",
+          "extras": {
+            "signature": "EmAKXgFpFH0TKIxAFcbA1LvCsvXcOUT05BbXuJ2uYtXdf+ZKibFW+9yRlUc3osh/61K+tL3AKg9ivGrjvaUl4pxdV+yAqhaKfjYgn4S1YyBSLkQ0vYQxerxqqeZATqVNuiU="
+          }
+        }
+      ],
+      "additional_kwargs": {},
+      "response_metadata": {
+        "finish_reason": "STOP",
+        "model_name": "gemini-3.5-flash-lite",
+        "safety_ratings": [],
+        "model_provider": "google_genai"
+      },
+      "type": "ai",
+      "name": null,
+      "id": "lc_run--01a130ef-9597-75b2-b306-b45d3d940a56-0",
+      "tool_calls": [],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 221,
+        "output_tokens": 81,
+        "total_tokens": 302,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      }
+    }
+  }
+]
