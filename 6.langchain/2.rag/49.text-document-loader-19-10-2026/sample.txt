@@ -1,0 +1,2 @@
+TextLoader loads text files and converts them into LangChain Document objects.
+This example demonstrates a basic local text file loader.
