@@ -1,0 +1,689 @@
+METADATA MANAGEMENT & MULTI-FORMAT DOCUMENT INSPECTOR
+-----------------------------------------------------
+Central Concept: Organising Document objects from different sources using consistent metadata and verifying that the loaded content is usable.
+
+ie From multiple sources creating Document objects with consistent metadata and verifying that the loaded content is usable.
+
+TXT + PDF + CSV + HTML → LangChain Documents → Metadata Standardisation → Document Inspector
+
+eg: universal adapter
+
+For the LLM, only content is not enough, metadata is very important.
+Without metadata, even llm is very powerful, but it cannot answer properly.
+
+Metadata  standardization:
+---------------------------
+***Metadata  standardization means maintaining a consistent set of descriptive fields across Documents from different sources.
+
+suppose we have three Documents.
+The first came from a text file.
+
+{
+    "source": "library_rules.txt"
+}
+
+The second came from a PDF.
+Its metadata contains:
+{
+    "source": "company_policy.pdf",
+    "page": 0,
+    "total_pages": 3
+}
+
+The third came from CSV.
+Its metadata contains:
+{
+    "source": "students.csv",
+    "row": 0
+}
+
+Observe carefully.
+The Documents are different.
+Their source-specific metadata is different.
+But we want some common information for all of them.
+For example:
+•	source
+•	source_type
+•	department
+•	category
+
+***Metadata standardisation makes different Documents easier to organise, inspect and process consistently.
+
+Real-Life Example — Hospital Records
+-------------------------------------
+Imagine a hospital maintains patient records from different departments.
+
+Cardiology.
+Orthopaedics.
+Neurology.
+
+Every department may maintain specialised information.
+
+But the hospital also needs certain common details.
+Patient ID.
+Department.
+Record type.
+Date.0
+
+Friends, standardisation does not mean removing all specialised information.
+It means maintaining a common structure while preserving useful details.
+The same principle applies to LangChain Documents.
+
+Updating Metadata Without Losing Original Information:
+------------------------------------------------------
+Friends, suppose we have:
+
+document.metadata = {
+    "source": "company_policy.pdf",
+    "page": 0
+}
+Now we want to add:
+department = "HR"
+
+If we replace the entire metadata dictionary carelessly, we may lose important source information.
+
+Instead, we can 'enrich' the existing metadata.
+
+document.metadata["department"] = "HR"
+
+Or:
+document.metadata.update({
+    "department": "HR",
+    "category": "Employee Policy"
+})
+
+Main Conclusion
+We should preserve original metadata while adding the custom information required by the application.
+
+Program 1 — Enriching Document Metadata
+---------------------------------------
+from langchain_core.documents import Document
+
+
+# ========================================
+# CREATE DOCUMENT
+# ========================================
+
+document = Document(
+    page_content="Library closes at 6 PM.",
+    metadata={
+        "source": "library_rules.txt"
+    }
+)
+
+
+# ========================================
+# PRESERVE ORIGINAL METADATA
+# ========================================
+
+original_metadata = document.metadata.copy()
+
+
+# ========================================
+# ADD CUSTOM METADATA
+# ========================================
+
+document.metadata.update({
+    "source_type": "txt",
+    "department": "Library",
+    "category": "Notice"
+})
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("SOURCE:", document.metadata["source"])
+
+print(
+    "SOURCE TYPE:",
+    document.metadata["source_type"]
+)
+
+print(
+    "DEPARTMENT:",
+    document.metadata["department"]
+)
+
+print(
+    "CATEGORY:",
+    document.metadata["category"]
+)
+
+print(
+    "SOURCE PRESERVED:",
+    document.metadata["source"]
+    ==
+    original_metadata["source"]
+)
+
+E:\lcclasses>py test.py
+SOURCE: library_rules.txt
+SOURCE TYPE: txt
+DEPARTMENT: Library
+CATEGORY: Notice
+SOURCE PRESERVED: True
+
+Conclusion: We can enrich LangChain Document metadata while preserving source information.
+
+Program 2 — Handling Zero-Based Page and Row Metadata
+------------------------------------------------------
+from langchain_core.documents import Document
+
+
+# ========================================
+# CREATE SAMPLE DOCUMENTS
+# ========================================
+
+documents = [
+
+    Document(
+        page_content="Employee leave policy.",
+        metadata={
+            "source": "policy.pdf",
+            "page": 0
+        }
+    ),
+
+    Document(
+        page_content="name: Ravi",
+        metadata={
+            "source": "students.csv",
+            "row": 0
+        }
+    ),
+
+    Document(
+        page_content="Library opens at 8 AM.",
+        metadata={
+            "source": "library.txt"
+        }
+    )
+
+]
+
+
+# ========================================
+# INSPECT SOURCE-SPECIFIC METADATA
+# ========================================
+
+for document in documents:
+
+    metadata = document.metadata
+
+    print("\nSOURCE:", metadata["source"])
+
+    page_index = metadata.get("page")
+
+    row_index = metadata.get("row")
+
+    if page_index is not None:
+
+        print(
+            "DISPLAY PAGE:",
+            page_index + 1
+        )
+
+    elif row_index is not None:
+
+        print(
+            "DISPLAY ROW:",
+            row_index + 1
+        )
+
+    else:
+
+        print(
+            "PAGE/ROW:",
+            "Not applicable"
+        )
+
+Program Explanation
+-------------------
+Friends, observe the first Document.
+Its page index is zero.
+
+But our application correctly displays:
+Page 1
+
+The second Document has row index zero.
+We display:
+Row 1
+The third Document has neither page nor row metadata.
+Therefore, we display:
+Not applicable
+
+Main Conclusion:
+---------------
+Correct metadata handling preserves zero-based indexes while presenting user-friendly page and row numbers.
+
+
+Note:
+The Python zip() function pairs up corresponding elements from two or more iterables (like lists, tuples, etc.) and returns an iterator of tuples.
+
+eg:
+names = ["Ravi", "Priya", "Rahul"]
+marks = [90, 85, 95]
+
+result = zip(names, marks) #Returns a zip object
+
+print(type(result)) #zip object
+print(result)
+print(list(result))
+
+<class 'zip'>
+<zip object at 0x000002A9E3D4B440>
+[('Ravi', 90), ('Priya', 85), ('Rahul', 95)]
+
+
+Program 3 — Metadata Standardisation
+------------------------------------
+Objective: Add common metadata fields to Documents from different source types.
+
+from pathlib import Path
+
+from langchain_core.documents import Document
+
+
+# ========================================
+# SAMPLE DOCUMENT COLLECTION
+# ========================================
+
+documents = [
+
+    Document(
+        page_content="Students must carry ID cards.",
+        metadata={
+            "source": "student_rules.txt"
+        }
+    ),
+
+    Document(
+        page_content="Employees receive 12 casual leaves.",
+        metadata={
+            "source": "company_policy.pdf",
+            "page": 0
+        }
+    ),
+
+    Document(
+        page_content="name: Ravi",
+        metadata={
+            "source": "students.csv",
+            "row": 0
+        }
+    )
+
+]
+
+
+# ========================================
+# KNOWN APPLICATION INFORMATION
+# ========================================
+
+classifications = [
+    ("txt", "Administration"),
+    ("pdf", "HR"),
+    ("csv", "Admissions")
+]
+
+
+# ========================================
+# STANDARDISE METADATA
+# ========================================
+
+for document, classification in zip(
+    documents,
+    classifications
+):
+
+    source_type, department = classification
+
+    document.metadata.update({
+        "source_type": source_type,
+        "department": department,
+        "document_name": Path(
+            document.metadata["source"]
+        ).name
+    })
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+for document in documents:
+
+    metadata = document.metadata
+
+    print("\nNAME:", metadata["document_name"])
+
+    print("TYPE:", metadata["source_type"])
+
+    print("DEPARTMENT:", metadata["department"])
+
+    print(
+        "ORIGINAL SOURCE:",
+        metadata["source"]
+    )
+
+
+Note:
+Metadata standardisation lets us give different Documents a consistent structure without losing their original source information.
+
+Program 4 — Multi-Format Document Inspector
+-------------------------------------------
+python -m pip install pypdf reportlab beautifulsoup4
+
+
+import csv
+
+from pathlib import Path
+
+from reportlab.pdfgen import canvas
+from pypdf import PdfReader
+from bs4 import BeautifulSoup
+
+from langchain_core.documents import Document
+
+
+# ========================================
+# PROJECT FOLDER
+# ========================================
+
+base_dir = Path(__file__).resolve().parent
+
+demo_dir = base_dir / "module9_final_demo"
+
+demo_dir.mkdir(exist_ok=True)
+
+
+# ========================================
+# CREATE TEXT FILE
+# ========================================
+
+txt_path = demo_dir / "student_rules.txt"
+
+txt_path.write_text(
+    "Students must carry ID cards.",
+    encoding="utf-8"
+)
+
+
+# ========================================
+# CREATE TWO-PAGE PDF
+# ========================================
+
+pdf_path = demo_dir / "company_policy.pdf"
+
+pdf = canvas.Canvas(str(pdf_path))
+
+pdf.drawString(
+    60, 750,
+    "ATTENDANCE POLICY"
+)
+
+pdf.drawString(
+    60, 720,
+    "Employees must report by 9 AM."
+)
+
+pdf.showPage()
+
+pdf.drawString(
+    60, 750,
+    "LEAVE POLICY"
+)
+
+pdf.drawString(
+    60, 720,
+    "Employees receive 12 casual leaves."
+)
+
+pdf.save()
+
+
+# ========================================
+# CREATE CSV FILE
+# ========================================
+
+csv_path = demo_dir / "students.csv"
+
+csv_path.write_text(
+    "name,course\n"
+    "Ravi,Python\n"
+    "Priya,Java\n",
+    encoding="utf-8"
+)
+
+
+# ========================================
+# CREATE HTML FILE
+# ========================================
+
+html_path = demo_dir / "course_page.html"
+
+html_path.write_text(
+    """
+    <html>
+    <head>
+        <title>Course Updates</title>
+    </head>
+    <body>
+        <main>
+            <h1>Course Updates</h1>
+            <p>Python batch starts Monday.</p>
+        </main>
+    </body>
+    </html>
+    """,
+    encoding="utf-8"
+)
+
+
+# ========================================
+# DOCUMENT COLLECTION
+# ========================================
+
+documents = []
+
+
+# ========================================
+# LOAD TEXT
+# ========================================
+
+documents.append(
+    Document(
+        page_content=txt_path.read_text(
+            encoding="utf-8"
+        ),
+        metadata={
+            "source": str(txt_path),
+            "source_type": "txt",
+            "department": "Administration"
+        }
+    )
+)
+
+
+# ========================================
+# LOAD PDF PAGES
+# ========================================
+
+reader = PdfReader(str(pdf_path))
+
+for page_index, page in enumerate(reader.pages):
+
+    documents.append(
+        Document(
+            page_content=page.extract_text() or "",
+            metadata={
+                "source": str(pdf_path),
+                "source_type": "pdf",
+                "department": "HR",
+                "page": page_index,
+                "total_pages": len(reader.pages)
+            }
+        )
+    )
+
+
+# ========================================
+# LOAD CSV ROWS
+# ========================================
+
+with csv_path.open(
+    "r",
+    encoding="utf-8",
+    newline=""
+) as file:
+
+    reader = csv.DictReader(file)
+
+    for row_index, row in enumerate(reader):
+
+        content = "\n".join(
+            f"{key}: {value}"
+            for key, value in row.items()
+        )
+
+        documents.append(
+            Document(
+                page_content=content,
+                metadata={
+                    "source": str(csv_path),
+                    "source_type": "csv",
+                    "department": "Admissions",
+                    "row": row_index
+                }
+            )
+        )
+
+
+# ========================================
+# LOAD SAVED HTML PAGE
+# ========================================
+
+soup = BeautifulSoup(
+    html_path.read_text(encoding="utf-8"),
+    "html.parser"
+)
+
+main = soup.select_one("main")
+
+documents.append(
+    Document(
+        page_content=main.get_text(
+            " ",
+            strip=True
+        ),
+        metadata={
+            "source": html_path.as_uri(),
+            "source_type": "html",
+            "department": "Training",
+            "title": soup.title.get_text(
+                strip=True
+            )
+        }
+    )
+)
+
+
+# ========================================
+# DOCUMENT INSPECTION REPORT
+# ========================================
+
+print("MULTI-FORMAT DOCUMENT INSPECTOR")
+print("===============================")
+
+print("TOTAL DOCUMENTS:", len(documents))
+
+
+for number, document in enumerate(
+    documents,
+    start=1
+):
+
+    metadata = document.metadata
+
+    content = " ".join(
+        document.page_content.split()
+    )
+
+    print("\nDOCUMENT", number)
+
+    print(
+        "TYPE:",
+        metadata["source_type"]
+    )
+
+    print(
+        "DEPARTMENT:",
+        metadata["department"]
+    )
+
+    print(
+        "CONTENT STATUS:",
+        "READY" if content else "EMPTY"
+    )
+
+    if "page" in metadata:
+
+        print(
+            "PAGE:",
+            metadata["page"] + 1
+        )
+
+    if "row" in metadata:
+
+        print(
+            "ROW:",
+            metadata["row"] + 1
+        )
+
+    print(
+        "PREVIEW:",
+        content[:70] if content else "No extractable text"
+    )
+
+
+# ========================================
+# SUMMARY BY SOURCE TYPE
+# ========================================
+
+print("\nDOCUMENT COUNT BY TYPE")
+print("----------------------")
+
+for source_type in [
+    "txt",
+    "pdf",
+    "csv",
+    "html"
+]:
+
+    count = sum(
+        document.metadata["source_type"]
+        == source_type
+        for document in documents
+    )
+
+    print(
+        source_type.upper(),
+        ":",
+        count
+    )
+
+
+# ========================================
+# EMPTY DOCUMENT COUNT
+# ========================================
+
+empty_count = sum(
+    not document.page_content.strip()
+    for document in documents
+)
+
+print("\nEMPTY DOCUMENTS:", empty_count)
+
+print("\nINSPECTION COMPLETED")
