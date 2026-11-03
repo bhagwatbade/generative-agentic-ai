@@ -1,0 +1,521 @@
+WHY TEXT SPLITTING? CHUNKS, CHUNK SIZE, CHUNK OVERLAP & SEPARATORS
+------------------------------------------------------------------
+Document
+   |
+   |--- page_content
+   |
+   |--- metadata
+For example:
+from langchain_core.documents import Document
+
+document = Document(
+    page_content="""
+    Employees must report by 9 AM.
+    Employees are eligible for casual leave.
+    Employees must follow company policies.
+    """,
+    metadata={
+        "source": "company_policy.txt"
+    }
+)
+
+print(document.page_content)
+print(document.metadata)
+
+
+
+500-PAGE PDF
+      |
+      v
+DOCUMENT LOADER
+      |
+      v
+LANGCHAIN DOCUMENT
+      |
+      v
+VERY LARGE PAGE CONTENT
+Now suppose our application sends the entire content to an LLM.
+
+Problem 1 — Context Window Limitations
+Problem 2 — Unnecessary Information
+Problem 3 — More Token Usage and Cost
+Problem 4 — Slower Processing
+Problem 5 — Difficult Information Retrieval
+
+
+MODULE 9
+--------
+SOURCE FILE
+    |
+    v
+DOCUMENT LOADER
+    |
+    v
+DOCUMENT OBJECT
+
+
+MODULE 10
+---------
+DOCUMENT OBJECT
+    |
+    v
+TEXT SPLITTER
+    |
+    v
+SMALLER CHUNKS
+
+Simple logic friends.
+Module 9 teaches us how to load data.
+Module 10 teaches us how to divide the loaded data.
+
+
+After loading a large document, how can we divide its content into smaller, useful pieces so that our AI application can process and search the information efficiently?
+
+
+
+
+Without Text Splitting	               With Text Splitting
+Content may remain one large unit	Content is divided into multiple pieces
+Difficult to select a small relevant portion	Smaller pieces can be searched individually
+Sending everything may use more tokens	   Selected chunks can reduce unnecessary input
+Less control over content size	        Chunk size can be configured
+
+6. Core Concepts — Four Important Words
+| Term          | Description                            |
+| ------------- | -------------------------------------- |
+| CHUNK         | A piece of text                        |
+| CHUNK SIZE    | How large a chunk should be            |
+| CHUNK OVERLAP | Repeated content between nearby chunks |
+| SEPARATOR     | Where the text can be divided          |
+
+
+6.1 What Is a Chunk?
+----------------------
+A chunk is a smaller piece of text obtained by dividing a larger text or document.
+Suppose our original text is:
+ABCDEFGHIJKL
+This text contains 12 characters.
+Now we divide it into pieces of 4 characters.
+ORIGINAL TEXT
+ABCDEFGHIJKL
+
+AFTER SPLITTING
+--------------
+Chunk 1: ABCD
+Chunk 2: EFGH
+Chunk 3: IJKL
+We obtained three chunks.
+
+6.2 What Is Chunk Size?
+------------------------
+Chunk size means the target maximum length of each chunk, measured using a chosen length function.
+
+Suppose:
+chunk_size = 5
+And our text is:
+ABCDEFGHIJKL
+
+With simple fixed-size splitting and no overlap:
+
+Chunk 1: ABCDE
+Chunk 2: FGHIJ
+Chunk 3: KL
+
+Observe carefully.
+The first chunk contains 5 characters.
+The second chunk contains 5 characters.
+The third chunk contains only 2 characters.
+
+Student Question: Sir, if chunk_size is 5, must every chunk contain exactly 5 characters?
+No.
+Chunk size generally acts as a target maximum, not a requirement that every chunk must have exactly that length.
+
+Note: Characters vs Tokens
+Both are different
+
+6.3 What Is Chunk Overlap?
+This is one of today’s most important concepts.
+Friends, imagine that one important sentence is present near the boundary between two chunks.
+If we divide the text at that point, the complete information may not remain together.
+To reduce this problem, we can repeat a small amount of content in neighbouring chunks.
+That repeated portion is called:
+CHUNK OVERLAP.
+Let us understand with a simple example.
+Original text:
+ABCDEFGHIJKL
+
+
+Configuration:
+chunk_size = 5
+chunk_overlap = 2
+Now apply simple fixed-width sliding chunks.
+Chunk 1: ABCDE
+Chunk 2: DEFGH
+Chunk 3: GHIJK
+Chunk 4: JKL
+Observe:
+•	DE is shared between chunks 1 and 2.
+•	GH is shared between chunks 2 and 3.
+•	JK is shared between chunks 3 and 4.
+
+Student Question:
+Sir, why should we repeat the same content? Is it not a waste of memory?
+Very good question.
+Repeating content does require extra space.
+But controlled overlap can help preserve information across chunk boundaries.
+
+It is a trade-off:
+•	No overlap may break related information.
+•	Some overlap can improve continuity.
+•	Too much overlap creates unnecessary duplication.
+
+6.4 What Are Separators?
+------------------------
+A separator is a character or sequence of characters used to identify possible places for splitting text.
+
+Separator	Meaning
+"\n\n"	Paragraph boundary
+"\n"	Newline
+" "	Space
+"."	Full stop, when explicitly selected
+""	Empty separator, used for character-level fallback in suitable splitters
+-----------------------------------------------
+Program 1 — Fixed-Size Chunking Using Python
+First Simple Python Program — Splitting Text Without Overlap
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "ABCDEFGHIJKL"
+
+
+# ========================================
+# CONFIGURE CHUNK SIZE
+# ========================================
+
+chunk_size = 5
+
+
+# ========================================
+# CREATE CHUNKS
+# ========================================
+
+chunks = []
+
+for i in range(0, len(text), chunk_size):
+
+    chunk = text[i:i + chunk_size]
+
+    chunks.append(chunk)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("ORIGINAL TEXT:", text)
+
+print("ORIGINAL LENGTH:", len(text))
+
+print("TOTAL CHUNKS:", len(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(
+        f"Chunk {index}: {chunk} "
+        f"| Length: {len(chunk)}"
+    )
+
+
+
+E:\lcclasses>py test.py
+ORIGINAL TEXT: ABCDEFGHIJKL
+ORIGINAL LENGTH: 12
+TOTAL CHUNKS: 3
+Chunk 1: ABCDE | Length: 5
+Chunk 2: FGHIJ | Length: 5
+Chunk 3: KL | Length: 2
+
+Note:
+for i in range(0, len(text), chunk_size):
+Here:
+range(0, 12, 5)
+generates:
+0
+5
+10
+
+
+Program 2 — Text Splitting With Chunk Overlap
+----------------------------------------------
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "ABCDEFGHIJKL"
+
+
+# ========================================
+# CONFIGURATION
+# ========================================
+
+chunk_size = 5
+
+chunk_overlap = 2
+
+
+# ========================================
+# VALIDATE CONFIGURATION
+# ========================================
+
+if not 0 <= chunk_overlap < chunk_size:
+    raise ValueError(
+        "Overlap must be non-negative "
+        "and smaller than chunk size"
+    )
+
+
+# ========================================
+# CALCULATE STEP SIZE
+# ========================================
+
+step = chunk_size - chunk_overlap
+
+
+# ========================================
+# CREATE CHUNKS
+# ========================================
+
+chunks = []
+
+for i in range(0, len(text), step):
+
+    chunk = text[i:i + chunk_size]
+
+    chunks.append(chunk)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("CHUNK SIZE:", chunk_size)
+
+print("CHUNK OVERLAP:", chunk_overlap)
+
+print("STEP SIZE:", step)
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {chunk}")
+
+E:\lcclasses>py test.py
+CHUNK SIZE: 5
+CHUNK OVERLAP: 2
+STEP SIZE: 3
+Chunk 1: ABCDE
+Chunk 2: DEFGH
+Chunk 3: GHIJK
+Chunk 4: JKL
+
+Program 3 — Understand Separators Using Python
+----------------------------------------------
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = (
+    "Python is easy.\n\n"
+    "LangChain helps create AI applications.\n\n"
+    "RAG uses documents."
+)
+
+
+# ========================================
+# DEFINE SEPARATOR
+# ========================================
+
+separator = "\n\n"
+
+
+# ========================================
+# SPLIT TEXT
+# ========================================
+
+chunks = text.split(separator)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("TOTAL CHUNKS:", len(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"\nChunk {index}:")
+    print(chunk)
+
+
+8.1 Important Classes
+LangChain provides a separate integration package for text splitting:
+langchain-text-splitters
+
+
+1. CharacterTextSplitter	Splits text based on a specified separator and combines pieces into chunks
+2. RecursiveCharacterTextSplitter	Tries different separators in sequence to create suitable chunks
+
+
+Important Methods
+Method	Input	Return type
+split_text()	String	list[str]
+split_documents()	List of Document objects	list[Document]
+
+
+
+
+Program 4 — Our First LangChain Text Splitting Program
+-------------------------------------------------------
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "ABCDEFGHIJKL"
+
+
+# ========================================
+# CREATE TEXT SPLITTER
+# ========================================
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=5,
+    chunk_overlap=2,
+    separators=[""]
+)
+
+
+# ========================================
+# SPLIT TEXT
+# ========================================
+
+chunks = splitter.split_text(text)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("RETURN TYPE:", type(chunks))
+
+print("TOTAL CHUNKS:", len(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {chunk}")
+
+
+E:\lcclasses>py test.py
+RETURN TYPE: <class 'list'>
+TOTAL CHUNKS: 4
+Chunk 1: ABCDE
+Chunk 2: DEFGH
+Chunk 3: GHIJK
+Chunk 4: JKL
+
+Note:
+1. "Separator decides WHERE to split. Chunk size decides HOW MUCH text to keep in each chunk. Chunk overlap decides HOW MUCH text to repeat."
+
+2. "Splitting decides the boundaries. Merging creates the final chunks. chunk_size controls their maximum size."
+-------------------------
+Program 5 — Splitting LangChain Document Objects
+------------------------------------------------
+from langchain_core.documents import Document
+
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# CREATE DOCUMENT
+# ========================================
+
+document = Document(
+    page_content="ABCDEFGHIJKL",
+
+    metadata={
+        "source": "sample.txt"
+    }
+)
+
+
+# ========================================
+# CREATE TEXT SPLITTER
+# ========================================
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=5,
+    chunk_overlap=2,
+    separators=[""]
+)
+
+
+# ========================================
+# SPLIT DOCUMENT
+# ========================================
+
+chunks = splitter.split_documents(
+    [document]
+)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("TOTAL DOCUMENT CHUNKS:", len(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"\nCHUNK {index}")
+
+    print("CONTENT:", chunk.page_content)
+
+    print("METADATA:", chunk.metadata)
+
+    print("TYPE:", type(chunk).__name__)
+
+E:\lcclasses>py test.py
+TOTAL DOCUMENT CHUNKS: 4
+
+CHUNK 1
+CONTENT: ABCDE
+METADATA: {'source': 'sample.txt'}
+TYPE: Document
+
+CHUNK 2
+CONTENT: DEFGH
+METADATA: {'source': 'sample.txt'}
+TYPE: Document
+
+CHUNK 3
+CONTENT: GHIJK
+METADATA: {'source': 'sample.txt'}
+TYPE: Document
+
+CHUNK 4
+CONTENT: JKL
+METADATA: {'source': 'sample.txt'}
+TYPE: Document
