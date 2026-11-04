@@ -1,0 +1,129 @@
+15. Common Mistakes, Limitations and Best Practices
+---------------------------------------------------
+Mistake 1 — Thinking Chunk Size Means Tokens
+Wrong.
+When the default length function is len, chunk size is measured using Python string length, not model tokens.
+
+Mistake 2 — Thinking All Chunks Must Have Equal Length
+Wrong.
+Actual chunk lengths can vary depending on the remaining text and splitting method.
+
+Mistake 3 — Thinking Chunk Overlap Must Always Be Zero
+Wrong.
+Controlled overlap may help preserve information across boundaries.
+
+Mistake 4 — Thinking More Overlap Is Always Better
+Wrong.
+Large overlap can create unnecessary duplication and additional storage or processing overhead.
+
+Mistake 5 — Thinking Separators and Chunk Size Are the Same
+Wrong.
+Chunk size controls the target length.
+Separators identify potential division points.
+
+Mistake 6 — Thinking Text Splitting Is the Same as Embedding
+Wrong.
+Text splitting divides the text.
+Embedding converts text into numerical vectors.
+
+Mistake 7 — Thinking Splitting Automatically Produces Better AI Answers
+Wrong.
+Splitting is a preparation step. Good retrieval, appropriate chunk design, useful context and model behaviour are also important.
+
+Mistake 8 — Ignoring Metadata
+If source information is important, ensure it remains available when splitting documents.
+
+Mistake 9 — Using One Chunk Size for Every Application
+Different documents and applications may need different splitting strategies.
+
+16.2 MCQs — With Answers and Explanations
+-----------------------------------------
+1. Why do we split large documents in LangChain?
+A. To delete unnecessary files
+B. To divide large text into smaller useful chunks
+C. To train the LLM automatically
+D. To convert text directly into images
+
+Answer: B. To divide large text into smaller useful chunks
+Explanation: Text splitting prepares smaller pieces that can be processed and retrieved more efficiently.
+
+2. What is a chunk?
+A. A complete AI model
+B. A type of API key
+C. A smaller piece of text
+D. A vector database
+Answer: C. A smaller piece of text
+Explanation: A chunk is a portion of the original document created during splitting.
+3. If chunk_size=5, must every output chunk contain exactly 5 characters?
+A. Yes, always
+B. Yes, except for PDF documents
+C. Only when using an LLM
+D. No, actual lengths depend on the splitting method
+Answer: D. No, actual lengths depend on the splitting method
+Explanation: Chunk size is normally a target maximum, and the resulting chunk length may vary.
+
+4. What is chunk overlap?
+A. Text repeated across neighbouring chunks
+B. The total number of documents
+C. The size of the original PDF
+D. The total input tokens of an LLM
+Answer: A. Text repeated across neighbouring chunks
+Explanation: Overlap repeats some nearby text to help preserve information across boundaries.
+
+
+
+5. What is one disadvantage of using too much overlap?
+A. It permanently deletes the text
+B. It creates unnecessary duplicate content
+C. It disables the LLM
+D. It removes all metadata
+Answer: B. It creates unnecessary duplicate content
+Explanation: Higher overlap can increase the number and total volume of chunks.
+
+6. Which separator commonly represents a blank line between paragraphs?
+A. A space only
+B. An empty dictionary
+C. \n\n
+D. The pipe operator
+Answer: C. \n\n
+Explanation: Two newline characters commonly represent a blank line between paragraphs.
+
+
+7. With the default length_function=len, what is used to measure chunk size?
+A. Python string length
+B. Number of PDF pages
+C. Number of AI models
+D. Database row count
+Answer: A. Python string length
+Explanation: The len function measures the number of characters in the Python string.
+
+8. What does split_text() return?
+A. One AIMessage
+B. A list of strings
+C. An embedding vector
+D. A database connection
+Answer: B. A list of strings
+Explanation: The method splits the input string and returns its chunks as list[str].
+
+
+
+9. What does split_documents() normally return?
+A. Only one long string
+B. A list of numbers
+C. One API key per chunk
+D. A list of Document objects
+Answer: D. A list of Document objects
+Explanation: It creates smaller Document objects and preserves their original source metadata.
+
+10. Which statement correctly describes the role of text splitting in RAG?
+A. Text splitting alone generates the final answer
+B. Text splitting automatically trains an LLM
+C. Text splitting prepares smaller pieces for later embedding and retrieval
+D. Text splitting replaces document loaders
+Answer: C. Text splitting prepares smaller pieces for later embedding and retrieval
+Explanation: Text splitting is one preparation step before embeddings, storage and retrieval.
+Attempt each MCQ, then check its correct answer and explanation.
+
+Summary conclusion:
+------------------
+Text Splitting is not simply cutting text into pieces. It is about preparing useful pieces of information so that our AI applications can process and retrieve knowledge effectively.
