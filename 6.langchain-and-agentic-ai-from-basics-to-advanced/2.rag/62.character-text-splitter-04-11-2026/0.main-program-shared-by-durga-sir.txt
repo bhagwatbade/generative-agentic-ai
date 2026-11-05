@@ -1,0 +1,577 @@
+CharacterTextSplitter: Complete Theory, Parameters, Methods & Practical Programs
+ --------------------------------------------------------------------------------
+ CharacterTextSplitter is a LangChain class that splits text using a specified separator and combines the resulting pieces into chunks according to the configured chunk size and overlap rules.
+
+Note:
+CharacterTextSplitter does not always cut a string after exactly 100 or 200 characters.
+It first tries to divide the text at its configured separator.
+Then it groups smaller pieces into chunks.
+This behaviour is very important.
+
+The main advantages are:
+1.	Reusable text-splitting functionality.
+2.	Configurable separators.
+3.	Chunk-size and overlap settings.
+4.	Direct support for LangChain Document objects.
+5.	Ability to retain document metadata.
+
+Python split() vs CharacterTextSplitter
+------------------------------------------------
+Python already has the split() method. Why do we require a LangChain class?
+
+
+Suppose:
+text = “Apple,Banana,Mango”
+
+Normal Python:
+parts = text.split(",")
+Result:
+["Apple", "Banana", "Mango"]
+
+Python simply divides the string using the delimiter.
+
+Now suppose we want to:
+•	Combine smaller pieces into chunks.
+•	Aim for a maximum chunk length.
+•	Maintain overlap between neighbouring chunks.
+•	Split Document objects and preserve their metadata.
+These are useful responsibilities handled by LangChain text splitters.
+
+
+Python str.split()	CharacterTextSplitter
+Basic string method	      LangChain class
+Splits using a delimiter	Splits and merges text
+Does not have chunk-size configuration	Supports chunk_size
+Does not provide overlap configuration	Supports chunk_overlap
+Returns list of strings	       Can return strings or Documents through different methods
+Does not manage Document metadata	Supports Document-based splitting
+
+7. How CharacterTextSplitter Works Internally
+-----------------------------------------------
+Suppose:
+text = "AAA|BBB|CCC|DDD"
+Configuration:
+separator = "|"
+chunk_size = 7
+chunk_overlap = 0
+
+Step 1 — Identify the separator
+The separator is:
+|
+
+
+Step 2 — Divide text into smaller pieces
+Conceptually:
+AAA
+BBB
+CCC
+DDD
+
+Step 3 — Merge pieces into chunks
+The splitter attempts to combine pieces without crossing the target chunk size.
+Because it keeps the separator between merged pieces, it can construct:
+AAA|BBB
+CCC|DDD
+
+Note:
+Splitting and merging are two separate parts of the process.
+
+
+Import and sample code:
+-----------------------
+from langchain_text_splitters import CharacterTextSplitter
+
+Create an object:
+splitter = CharacterTextSplitter(
+    separator="|",
+    chunk_size=7,
+    chunk_overlap=0
+)
+
+Split text:
+chunks = splitter.split_text(text)
+Here:
+•	CharacterTextSplitter(...) creates the splitter object.
+•	split_text(text) performs the splitting.
+•	chunks contains a list of strings.
+
+9. Important Constructor Parameters
+-----------------------------------
+Let's understand the parameters before writing more programs.
+Parameter	Default	Purpose
+separator	"\n\n"	Splitting boundary
+chunk_size	4000	Target maximum chunk length
+chunk_overlap	200	Target overlap
+length_function	len	Measures text length
+keep_separator	False	Controls whether the separator is retained
+is_separator_regex	False	Treats separator as a regular expression when enabled
+strip_whitespace	True	Removes leading and trailing whitespace from final chunks
+add_start_index	False	Adds chunk start position to Document metadata when enabled
+
+Note:
+1. length_function
+length_function=len
+This determines how the chunk length is measured.
+With len, length is measured using Python string length.
+
+2. keep_separator
+keep_separator=False
+The separator is not necessarily retained in every initial split piece, but it is normally reinserted when those pieces are merged into a chunk.
+The setting also supports "start" and "end".
+
+3. is_separator_regex
+is_separator_regex=False
+The separator is treated as literal text.
+When set to True, it is interpreted as a regular expression.
+
+4. strip_whitespace
+strip_whitespace=True
+Leading and trailing whitespace is removed from the resulting merged chunks.
+
+5. add_start_index
+add_start_index=True
+When generating Document chunks, their metadata can include the starting character position of each chunk in the original text.
+
+Program 1 — First CharacterTextSplitter Program
+------------------------------------------------
+from langchain_text_splitters import CharacterTextSplitter
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "AAA|BBB|CCC|DDD"
+
+
+# ========================================
+# CREATE TEXT SPLITTER
+# ========================================
+
+splitter = CharacterTextSplitter(
+    separator="|",
+    chunk_size=7,
+    chunk_overlap=0
+)
+
+
+# ========================================
+# SPLIT TEXT
+# ========================================
+
+chunks = splitter.split_text(text)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("ORIGINAL TEXT:", text)
+print("TOTAL CHUNKS:", len(chunks))
+print("RETURN TYPE:", type(chunks))
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(
+        f"Chunk {index}: {chunk} "
+        f"| Length: {len(chunk)}"
+    )
+
+E:\lcclasses>py test.py
+ORIGINAL TEXT: AAA|BBB|CCC|DDD
+TOTAL CHUNKS: 2
+RETURN TYPE: <class 'list'>
+Chunk 1: AAA|BBB | Length: 7
+Chunk 2: CCC|DDD | Length: 7
+
+Program 2 — Understanding the Default Separator
+-----------------------------------------------
+LangChain uses the default separator:
+"\n\n"
+
+
+from langchain_text_splitters import CharacterTextSplitter
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = (
+    "Python is easy.\n\n"
+    "Java is powerful.\n\n"
+    "LangChain builds AI apps."
+)
+
+
+# ========================================
+# CREATE SPLITTER
+# ========================================
+
+splitter = CharacterTextSplitter(
+    chunk_size=20,
+    chunk_overlap=0
+)
+
+
+# ========================================
+# SPLIT TEXT
+# ========================================
+
+chunks = splitter.split_text(text)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("TOTAL CHUNKS:", len(chunks))
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"\nCHUNK {index}")
+
+    print(repr(chunk))
+
+    print("LENGTH:", len(chunk))
+
+E:\lcclasses>py test.py
+TOTAL CHUNKS: 3
+
+CHUNK 1
+'Python is easy.'
+LENGTH: 15
+
+CHUNK 2
+'Java is powerful.'
+LENGTH: 17
+
+CHUNK 3
+'LangChain builds AI apps.'
+LENGTH: 25
+
+Note:
+A target chunk size does not guarantee a strict limit when the chosen splitter cannot further divide a large piece.
+
+Program 3 — The Most Important Limitation: Missing Separator
+-------------------------------------------------------------
+from langchain_text_splitters import CharacterTextSplitter
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+# ========================================
+# CREATE SPLITTER
+# ========================================
+
+splitter = CharacterTextSplitter(
+    separator="\n\n",
+    chunk_size=5,
+    chunk_overlap=0
+)
+
+
+# ========================================
+# SPLIT TEXT
+# ========================================
+
+chunks = splitter.split_text(text)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("ORIGINAL LENGTH:", len(text))
+print("CONFIGURED CHUNK SIZE:", 5)
+print("TOTAL CHUNKS:", len(chunks))
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {chunk}")
+    print("Length:", len(chunk))
+
+
+E:\lcclasses>py test.py
+ORIGINAL LENGTH: 26
+CONFIGURED CHUNK SIZE: 5
+TOTAL CHUNKS: 1
+Chunk 1: ABCDEFGHIJKLMNOPQRSTUVWXYZ
+Length: 26
+
+Note:
+what should we use if we want the splitter to try paragraphs, then lines, then spaces, and finally individual characters?
+We can use RecursiveCharacterTextSplitter.
+
+
+Very Important Conclusion: CharacterTextSplitter is separator-based, not a strict fixed-width slicing algorithm.
+
+Program 4 — Splitting Using a Space Separator
+---------------------------------------------
+from langchain_text_splitters import CharacterTextSplitter
+
+
+text = "Apple Banana Mango Orange"
+
+
+splitter = CharacterTextSplitter(
+    separator=" ",
+    chunk_size=12,
+    chunk_overlap=0
+)
+
+
+chunks = splitter.split_text(text)
+
+
+print("TOTAL CHUNKS:", len(chunks))
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {repr(chunk)}")
+    print("Length:", len(chunk))
+
+E:\lcclasses>py test.py
+TOTAL CHUNKS: 2
+Chunk 1: 'Apple Banana'
+Length: 12
+Chunk 2: 'Mango Orange'
+Length: 12
+
+Program 5 — Chunk Overlap With CharacterTextSplitter
+----------------------------------------------------
+from langchain_text_splitters import CharacterTextSplitter
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "AAA|BBB|CCC|DDD"
+
+
+# ========================================
+# CREATE SPLITTER
+# ========================================
+
+splitter = CharacterTextSplitter(
+    separator="|",
+    chunk_size=7,
+    chunk_overlap=3
+)
+
+
+# ========================================
+# SPLIT TEXT
+# ========================================
+
+chunks = splitter.split_text(text)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {chunk}")
+
+E:\lcclasses>py test.py
+Chunk 1: AAA|BBB
+Chunk 2: BBB|CCC
+Chunk 3: CCC|DDD
+
+Program 6 — keep_separator: False vs True
+-----------------------------------------
+from langchain_text_splitters import CharacterTextSplitter
+
+
+text = "AAA|BBB|CCC"
+
+
+# ========================================
+# APPROACH 1 — keep_separator=False
+# ========================================
+
+splitter1 = CharacterTextSplitter(
+    separator="|",
+    chunk_size=3,
+    chunk_overlap=0,
+    keep_separator=False
+)
+
+chunks1 = splitter1.split_text(text)
+
+
+print("WITHOUT KEEPING SEPARATOR")
+
+for chunk in chunks1:
+    print(repr(chunk))
+
+
+# ========================================
+# APPROACH 2 — keep_separator=True
+# ========================================
+
+splitter2 = CharacterTextSplitter(
+    separator="|",
+    chunk_size=3,
+    chunk_overlap=0,
+    keep_separator=True
+)
+
+chunks2 = splitter2.split_text(text)
+
+
+print("\nKEEP SEPARATOR AT START")
+
+for chunk in chunks2:
+    print(repr(chunk))
+
+
+E:\lcclasses>py test.py
+WITHOUT KEEPING SEPARATOR
+'AAA'
+'BBB'
+'CCC'
+Created a chunk of size 4, which is longer than the specified 3
+
+KEEP SEPARATOR AT START
+'AAA'
+'|BBB'
+'|CCC'
+
+Note:
+str() vs repr()
+str()	repr()
+Human-readable representation	Developer-friendly representation
+Focuses on readability	Focuses on debugging
+Special characters may appear as actual formatting	Special characters like \n are shown as escape sequences
+
+Important: repr() does not change the original string.
+
+Learning Conclusion: repr() helps us see the actual representation of data, including hidden characters such as \n and \t.
+
+Student Question: Sir, can we keep the separator at the end instead of the beginning?
+Yes.
+We can use:
+keep_separator="end"
+For example:
+splitter = CharacterTextSplitter(
+    separator="|",
+    chunk_size=4,
+    chunk_overlap=0,
+    keep_separator="end"
+)
+
+For the same text, the chunks are:
+'AAA|'
+'BBB|'
+'CCC'
+Important: keep_separator=False does not mean every separator always disappears from final text. Separators may be reinserted when smaller pieces are merged.
+
+
+Program 7 — Understanding split_documents() and Metadata
+---------------------------------------------------------
+from langchain_core.documents import Document
+
+from langchain_text_splitters import CharacterTextSplitter
+
+
+# ========================================
+# CREATE DOCUMENT
+# ========================================
+
+document = Document(
+    page_content="AAA|BBB|CCC|DDD",
+
+    metadata={
+        "source": "company_policy.txt",
+        "department": "HR"
+    }
+)
+
+
+# ========================================
+# CREATE SPLITTER
+# ========================================
+
+splitter = CharacterTextSplitter(
+    separator="|",
+    chunk_size=7,
+    chunk_overlap=0
+)
+
+
+# ========================================
+# SPLIT DOCUMENT
+# ========================================
+
+chunks = splitter.split_documents(
+    [document]
+)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("TOTAL CHUNKS:", len(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"\nCHUNK {index}")
+
+    print("CONTENT:", chunk.page_content)
+
+    print("METADATA:", chunk.metadata)
+
+    print("TYPE:", type(chunk).__name__)
+
+
+Remember:
+split_text() returns strings.
+split_documents() returns Document objects
+
+
+Program 8 — Understanding add_start_index
+------------------------------------------
+"After splitting a document, how can we find the original starting position of each chunk?"
+LangChain provides:
+add_start_index=True
+
+
+from langchain_core.documents import Document
+
+from langchain_text_splitters import CharacterTextSplitter
+
+
+document = Document(
+    page_content="AAA|BBB|CCC|DDD",
+    metadata={"source": "demo.txt"}
+)
+
+
+splitter = CharacterTextSplitter(
+    separator="|",
+    chunk_size=7,
+    chunk_overlap=0,
+    add_start_index=True
+)
+
+
+chunks = splitter.split_documents([document])
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"\nCHUNK {index}")
+    print("CONTENT:", chunk.page_content)
+    print("START INDEX:", chunk.metadata["start_index"])
+    print("SOURCE:", chunk.metadata["source"])
