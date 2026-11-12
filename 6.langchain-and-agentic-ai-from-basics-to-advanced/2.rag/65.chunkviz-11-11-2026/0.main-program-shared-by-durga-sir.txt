@@ -1,0 +1,53 @@
+ChunkViz.com
+-------------
+ChunkViz is an online visualisation tool used to understand how text is divided into smaller chunks, especially for LLMs, LangChain and RAG applications.
+
+
+1. Text Chunking Visualisation: Shows how large text is divided into smaller chunks.
+
+2. Different Colours: Displays different chunks in different colours for easy understanding.
+
+3. Chunk Size: Allows us to control the target size of each chunk using characters or tokens, depending on the splitter.
+
+4. Chunk Overlap: Allows us to configure how much text is shared between consecutive chunks.
+
+5. Overlap Highlighting: Shows overlapping text in green colour.
+
+6. Multiple Text Splitters: Supports Character Splitter, Token Splitter, Sentence Splitter, Recursive Character Splitter and language-specific splitting.
+
+7. Custom Text Input: We can paste our own text and check how it is split.
+
+8. Easy Comparison: We can change chunk size, overlap and splitter type to understand the differences.
+
+9. Useful for RAG Applications: Helps us understand chunk boundaries before storing document chunks in a vector database.
+
+10. Free and Open Source: Available online, with source code under the MIT licence. Created by Greg Kamradt.
+ChunkViz.com
+-------------
+ChunkViz is an online visualisation tool used to understand how text is divided into smaller chunks, especially for LLMs, LangChain and RAG applications.
+
+
+1. Text Chunking Visualisation: Shows how large text is divided into smaller chunks.
+
+2. Different Colours: Displays different chunks in different colours for easy understanding.
+
+3. Chunk Size: Allows us to control the target size of each chunk using characters or tokens, depending on the splitter.
+
+4. Chunk Overlap: Allows us to configure how much text is shared between consecutive chunks.
+
+5. Overlap Highlighting: Shows overlapping text in green colour.
+
+6. Multiple Text Splitters: Supports Character Splitter, Token Splitter, Sentence Splitter, Recursive Character Splitter and language-specific splitting.
+
+7. Custom Text Input: We can paste our own text and check how it is split.
+
+8. Easy Comparison: We can change chunk size, overlap and splitter type to understand the differences.
+
+9. Useful for RAG Applications: Helps us understand chunk boundaries before storing document chunks in a vector database.
+
+10. Free and Open Source: Available online, with source code under the MIT licence. Created by Greg Kamradt.
+
+Note:
+ChunkViz helps us see exactly where text is divided, how chunks overlap and how different splitting strategies work.
+Note:
+ChunkViz helps us see exactly where text is divided, how chunks overlap and how different splitting strategies work.

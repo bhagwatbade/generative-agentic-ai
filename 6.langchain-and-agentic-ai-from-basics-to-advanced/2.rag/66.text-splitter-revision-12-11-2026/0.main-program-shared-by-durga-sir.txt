@@ -1,0 +1,477 @@
+Text Splitting Experiments: Chunk Size, Chunk Overlap & Choosing the Right Splitting Strategy
+----------------------------------------------------------------
+Concept     	Meaning
+Chunk	        One smaller piece of text
+Chunk size	Target maximum length of a chunk
+Chunk overlap	Target repeated content between neighbouring chunks
+Separator	Possible boundary for dividing text
+-------------
+3. Why Do We Need Experiments in Text Splitting?
+------------------------------------------------
+Friends, imagine a company with a 500-page policy document.
+We are building a RAG application.
+A user asks:
+"How many casual leaves are allowed every year?"
+Our application must find the leave policy information and send relevant context to an LLM.
+But suppose the document was split into very small chunks.
+One chunk contains:
+Employees are eligible for
+
+Another chunk contains:
+12 casual leaves every year.
+
+The complete information is separated.
+Now suppose we use a very large chunk.
+
+That chunk may contain:
+•	Attendance rules
+•	Salary rules
+•	Leave rules
+•	Security rules
+•	Travel rules
+The required answer is present, but a large amount of unrelated information is also included.
+We need a balance.
+
+The objective is not simply to produce the maximum number of chunks or minimum number of chunks.
+Our objective is to produce useful chunks.
+
+Student Question: Sir, what is a useful chunk?
+A useful chunk contains enough related information for the application to process or retrieve it effectively, without unnecessary information where possible.
+
+Small Chunk Size
+-----------------
+With smaller chunks:
+•	More chunks may be produced.
+•	Each chunk contains less information.
+•	Retrieval may become more focused.
+•	Related information may be split across chunks.
+
+Large Chunk Size
+------------------
+With larger chunks:
+•	Fewer chunks may be produced.
+•	Each chunk contains more context.
+•	More unrelated information may be included.
+•	Some questions may benefit from the additional surrounding context.
+
+Very Important Clarification
+------------------------------
+Friends, small chunks are not automatically better.
+Large chunks are also not automatically better.
+The right choice depends on our application.
+
+Program 1 — One Large Chunk vs Multiple Chunks
+-----------------------------------------------
+Goal: Observe how changing chunk size changes the number of chunks.
+We will use a string containing 20 characters.
+
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "ABCDEFGHIJKLMNOPQRST"
+
+
+# ========================================
+# DIFFERENT CHUNK SIZES
+# ========================================
+
+chunk_sizes = [20, 10, 5]
+
+
+# ========================================
+# RUN EXPERIMENTS
+# ========================================
+
+for size in chunk_sizes:
+
+    splitter = RecursiveCharacterTextSplitter(
+        separators=[""],
+        chunk_size=size,
+        chunk_overlap=0
+    )
+
+    chunks = splitter.split_text(text)
+
+    print("\nCHUNK SIZE:", size)
+    print("TOTAL CHUNKS:", len(chunks))
+
+    for index, chunk in enumerate(chunks, start=1):
+
+        print(
+            f"Chunk {index}: {chunk}"
+        )
+Program 2 — Comparing Different Overlaps
+----------------------------------------
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "ABCDEFGHIJKLMNOPQRST"
+
+
+# ========================================
+# FIXED CHUNK SIZE
+# ========================================
+
+chunk_size = 6
+
+
+# ========================================
+# DIFFERENT OVERLAPS
+# ========================================
+
+overlap_values = [0, 2, 4]
+
+
+# ========================================
+# RUN EXPERIMENTS
+# ========================================
+
+for overlap in overlap_values:
+
+    splitter = RecursiveCharacterTextSplitter(
+        separators=[""],
+        chunk_size=chunk_size,
+        chunk_overlap=overlap
+    )
+
+    chunks = splitter.split_text(text)
+
+    print("\nCHUNK OVERLAP:", overlap)
+    print("TOTAL CHUNKS:", len(chunks))
+
+    for index, chunk in enumerate(chunks, start=1):
+
+        print(
+            f"Chunk {index}: {chunk}"
+        )
+
+----------------------
+Program 5 — Real-Life Experiment Using Company Policies
+---------------------------------------------------------
+Friends, until now we used alphabet examples.
+That was useful for understanding exact chunk sizes and overlap.
+Now let us use meaningful text.
+Suppose our document contains three company policies.
+
+from langchain_core.documents import Document
+
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# CREATE COMPANY POLICY DOCUMENT
+# ========================================
+
+document = Document(
+    page_content=(
+        "ATTENDANCE POLICY\n"
+        "Employees must report to the office by 9 AM.\n\n"
+
+        "LEAVE POLICY\n"
+        "Employees receive 12 casual leaves every year.\n\n"
+
+        "WORK FROM HOME POLICY\n"
+        "Employees need manager approval to work from home."
+    ),
+    metadata={
+        "source": "company_policy.txt",
+        "department": "HR"
+    }
+)
+
+
+# ========================================
+# DIFFERENT CHUNK SIZES
+# ========================================
+
+chunk_sizes = [40, 80, 200]
+
+
+# ========================================
+# RUN EXPERIMENTS
+# ========================================
+
+for size in chunk_sizes:
+
+    print("\n" + "=" * 45)
+    print("CHUNK SIZE:", size)
+    print("=" * 45)
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=size,
+        chunk_overlap=0
+    )
+
+    chunks = splitter.split_documents(
+        [document]
+    )
+
+    print("TOTAL CHUNKS:", len(chunks))
+
+    for index, chunk in enumerate(
+        chunks,
+        start=1
+    ):
+
+        print(f"\nCHUNK {index}")
+        print("-" * 30)
+
+        print(chunk.page_content)
+
+        print(
+            "LENGTH:",
+            len(chunk.page_content)
+        )
+
+        print(
+            "SOURCE:",
+            chunk.metadata["source"]
+        )
+
+What Students Should Observe
+Run the program and compare the output for all three configurations.
+Chunk size	What to examine
+40	Are policy headings separated from their explanations?
+80	Are related headings and policy details kept together?
+200	Do multiple different policies appear in one chunk?
+==================
+Program-1: Choosing the Right Chunk Size and Chunk Overlap Based on Input Data (FAQ Example)
+====================================================================================
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+# STEP 1: Input data - 3 independent Q&A pairs
+
+faqs = [
+    """Q1: What is Python?
+A1: Python is a high-level programming language. It is widely used in web development, artificial intelligence, data analysis and automation. Its syntax is easy to read, so many beginners start programming with Python. It also offers many ready-made libraries for practical projects.""",
+
+    """Q2: What is Java?
+A2: Java is an object-oriented programming language. Developers use it to build enterprise applications, backend services and many large systems. Java programs normally run on the Java Virtual Machine, which helps the same compiled program work on different supported operating systems.""",
+
+    """Q3: What is SQL?
+A3: SQL stands for Structured Query Language. We use it to work with relational databases. Common operations include reading rows using SELECT, inserting records using INSERT, modifying data using UPDATE and removing records using DELETE. SQL helps applications manage structured data."""
+]
+
+text = "\n\n".join(faqs)
+
+print("Q&A lengths:", [len(faq) for faq in faqs])
+
+# STEP 2: Compare different chunk sizes and overlaps
+
+for size, overlap in [(150, 0), (600, 0), (600, 150), (2000, 0)]:
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=size,
+        chunk_overlap=overlap,
+        separators=["\n\n", "\n", " ", ""],
+        keep_separator=False
+    )
+
+    chunks = splitter.split_text(text)
+
+    print(f"\nChunk Size: {size}, Overlap: {overlap}")
+    print("Total Chunks:", len(chunks))
+
+    for i, chunk in enumerate(chunks, 1):
+        print(f"\nChunk {i}:")
+        print(chunk)
+        print("-" * 40)
+===============================================================
+Program-2:
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+# STEP 1: Three independent product descriptions
+
+products = [
+    """Product 1: Smartphone
+Price: Rs. 20,000
+Features: 8 GB RAM, 128 GB storage, 5000 mAh battery and 50 MP camera. This phone is suitable for students who attend online classes, watch videos and use everyday apps. Its battery can support long use, and its storage can hold photos, notes and learning materials.""",
+
+    """Product 2: Laptop
+Price: Rs. 55,000
+Features: 16 GB RAM, 512 GB SSD and a 15-inch display. This laptop is suitable for programming, office work and online meetings. It can run a code editor, browser tabs and development tools together. The SSD helps applications open quickly and saves project files.""",
+
+    """Product 3: Headphones
+Price: Rs. 2,000
+Features: Wireless connection, built-in microphone and up to 30 hours of battery life. These headphones are suitable for music, video lectures and calls. A soft ear cushion improves comfort during long listening sessions. The microphone helps with online class discussions."""
+]
+
+text = "\n\n".join(products)
+
+print("Length of each product:", [len(p) for p in products])
+
+# STEP 2: Compare three chunk sizes
+
+for size in [150, 500, 2000]:
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=size,
+        chunk_overlap=0,
+        separators=["\n\n", "\n", " ", ""],
+        keep_separator=False
+    )
+
+    chunks = splitter.split_text(text)
+
+    print(f"\nCHUNK SIZE = {size}, OVERLAP = 0")
+    print("TOTAL CHUNKS:", len(chunks))
+
+    for i, chunk in enumerate(chunks, 1):
+        print(f"\nChunk {i}:")
+        print(chunk)
+        print("-" * 40)
+========================================================================
+Program-3:
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+# STEP 1: Educational notes - Connected paragraphs
+#Paragraph1- variables, paragraph-2: data types, paragraph-3: conversions
+
+text = """
+Python variables store values. For example, age = 20 stores the value 20 in a variable named age. We can later use age in calculations and print statements. The value in a variable can change while a program runs.
+
+Every value has a data type. The value 20 is an integer, 20.5 is a float, and "20" is a string. Even though 20 and "20" look similar, Python treats them differently. We must understand data types before performing operations.
+
+Sometimes a program receives age as the string "20" from a form. To add 5 to this age, we first convert it into an integer using int("20"). This process is called type conversion. Type conversion connects variables and data types in practical programs.
+"""
+
+print("Total Text Length:", len(text))
+
+# STEP 2: Compare different settings
+
+for size, overlap in [(100, 0), (250, 0), (250, 50), (1000, 0)]:
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=size,
+        chunk_overlap=overlap,
+        separators=[" ", ""]
+    )
+
+    chunks = splitter.split_text(text)
+
+    print(f"\nChunk Size: {size}, Overlap: {overlap}")
+    print("Total Chunks:", len(chunks))
+
+    for i, chunk in enumerate(chunks, 1):
+        print(f"\nChunk {i}:")
+        print(chunk)
+        print("-" * 40)
+------------------------------------------
+1. What is the main goal of chunk-size experiments?
+A. To train the LLM
+B. To find a suitable splitting configuration
+C. To replace embeddings
+D. To remove all metadata
+
+2. What generally happens when chunk size decreases while other settings remain fixed?
+A. More chunks may be generated
+B. All chunks disappear
+C. The model automatically improves
+D. Text becomes embeddings
+
+3. What is one possible problem with very small chunks?
+A. They always exceed the context window
+B. They automatically delete the source file
+C. Related information may be separated
+D. They cannot be stored
+
+
+
+4. What is one possible problem with very large chunks?
+A. They cannot contain text
+B. They always use less memory
+C. They automatically perform retrieval
+D. They may contain unrelated information
+
+5. What generally happens when overlap increases in fixed-width splitting?
+A. Repeated content decreases
+B. Repeated content increases
+C. The source document changes
+D. Embeddings are generated automatically
+
+6. Which formula describes step size in simple fixed-width splitting?
+A. Chunk size minus chunk overlap
+B. Chunk size plus original length
+C. Chunk overlap multiplied by tokens
+D. Number of chunks minus one
+
+7. What is a useful measurement during chunk analysis?
+A. Computer screen size
+B. Python file name only
+C. Number of AI providers
+D. Minimum, maximum and average chunk length
+
+8. Does a larger number of chunks guarantee better RAG answers?
+A. Yes, always
+B. Yes, for PDFs only
+C. No, quality depends on content and retrieval
+D. Only when overlap is zero
+
+
+
+
+9. What should we check when evaluating a chunking strategy?
+A. Only the total number of chunks
+B. Whether relevant facts remain together and can be retrieved
+C. Only the Python version
+D. Only the original file size
+
+10. Which statement best describes choosing chunk size and overlap?
+A. Always use the largest possible chunk
+B. Always use zero overlap
+C. Copy one configuration for every file
+D. Experiment and evaluate using real documents and questions
+
+Answer Key
+Q1
+B
+
+
+Q2
+A
+
+
+Q3
+C
+
+
+Q4
+D
+
+
+Q5
+B
+
+
+Q6
+A
+
+
+Q7
+D
+
+
+Q8
+C
+
+
+Q9
+B
+
+
+Q10
+D

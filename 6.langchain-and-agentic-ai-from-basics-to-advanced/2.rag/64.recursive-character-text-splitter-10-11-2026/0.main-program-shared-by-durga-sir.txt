@@ -1,0 +1,635 @@
+RecursiveCharacterTextSplitter
+------------------------------
+from langchain_text_splitters import CharacterTextSplitter
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+# ========================================
+# CREATE SPLITTER
+# ========================================
+
+splitter = CharacterTextSplitter(
+    separator="\n\n",
+    chunk_size=5,
+    chunk_overlap=0
+)
+
+
+# ========================================
+# SPLIT TEXT
+# ========================================
+
+chunks = splitter.split_text(text)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("ORIGINAL LENGTH:", len(text))
+print("CONFIGURED CHUNK SIZE:", 5)
+print("TOTAL CHUNKS:", len(chunks))
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {chunk}")
+    print("Length:", len(chunk))
+
+Because CharacterTextSplitter is designed around one configured separator.
+We can  solves this problem by trying multiple separators in order. For this we required to use: RecursiveCharacterTextSplitter
+
+3. Why Do We Need RecursiveCharacterTextSplitter?
+-------------------------------------------------
+Suppose we are processing a company policy document containing:
+•	Multiple paragraphs
+•	Multiple lines
+•	Long sentences
+•	Short sentences
+•	Some very long words or codes
+If we split only at paragraph boundaries, a very large paragraph may remain.
+If we split only at newline boundaries, a very long line may remain.
+If we split only at spaces, a very long word may remain.
+
+First try paragraph boundary
+           |
+           v
+If a piece is still too large
+           |
+           v
+Try newline boundary
+           |
+           v
+If still too large
+           |
+           v
+Try space boundary
+           |
+           v
+If still too large
+           |
+           v
+Split character by character
+
+That is the basic idea behind RecursiveCharacterTextSplitter
+
+What Is RecursiveCharacterTextSplitter?
+----------------------------------------
+RecursiveCharacterTextSplitter is a LangChain class that divides text into smaller chunks by trying multiple separators in a specified order and recursively splitting oversized pieces when necessary.
+
+bserve carefully.
+There are three important ideas in this definition:
+1.	Multiple separators
+2.	Priority order
+3.	Recursive splitting of oversized pieces
+
+CharacterTextSplitter vs RecursiveCharacterTextSplitter
+----------------------------------------------------------
+Feature	        CharacterTextSplitter	         RecursiveCharacterTextSplitter
+Main strategy	 One configured separator	Ordered list of separators
+Parameter	separator	               separators
+Recursive splitting	No	                  Yes
+Long indivisible piece	Can remain oversized	Can be divided using fallback separators
+Default boundary	"\n\n"	                   ["\n\n", "\n", " ", ""]
+Common use	Simple structured text	       General text documents
+Flexibility	Lower	                      Higher
+
+
+10.4 Important Parameters
+--------------------------
+Parameter	Default value	Purpose
+chunk_size	4000	Target maximum chunk length
+chunk_overlap	200	Target overlap between chunks
+separators	["\n\n", "\n", " ", ""]	Separator priority
+keep_separator	True	Retain the separator, normally at the start of the following piece
+length_function	len	Measure chunk length
+is_separator_regex	False	Treat separators as literal text unless enabled
+strip_whitespace	True	Strip outer whitespace from merged chunks
+add_start_index	False	Include original character position in Document metadata
+
+
+Program 1 — First RecursiveCharacterTextSplitter Program
+---------------------------------------------------------
+Goal: Prove that recursive splitting can divide text even when there are no spaces or paragraph boundaries.
+
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "ABCDEFGHIJKL"
+
+
+# ========================================
+# CREATE TEXT SPLITTER
+# ========================================
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=5,
+    chunk_overlap=0
+)
+
+
+# ========================================
+# SPLIT TEXT
+# ========================================
+
+chunks = splitter.split_text(text)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("ORIGINAL TEXT:", text)
+
+print("TOTAL CHUNKS:", len(chunks))
+
+print("RETURN TYPE:", type(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(
+        f"Chunk {index}: {chunk} "
+        f"| Length: {len(chunk)}"
+    )
+
+E:\lcclasses>py test.py
+ORIGINAL TEXT: ABCDEFGHIJKL
+TOTAL CHUNKS: 3
+RETURN TYPE: <class 'list'>
+Chunk 1: ABCDE | Length: 5
+Chunk 2: FGHIJ | Length: 5
+Chunk 3: KL | Length: 2
+
+Program 2 — CharacterTextSplitter vs RecursiveCharacterTextSplitter
+-------------------------------------------------------------------
+from langchain_text_splitters import (
+    CharacterTextSplitter,
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "ABCDEFGHIJKL"
+
+
+# ========================================
+# APPROACH 1 — CHARACTER TEXT SPLITTER
+# ========================================
+
+splitter1 = CharacterTextSplitter(
+    separator="\n\n",
+    chunk_size=5,
+    chunk_overlap=0
+)
+
+chunks1 = splitter1.split_text(text)
+
+
+# ========================================
+# APPROACH 2 — RECURSIVE TEXT SPLITTER
+# ========================================
+
+splitter2 = RecursiveCharacterTextSplitter(
+    chunk_size=5,
+    chunk_overlap=0
+)
+
+chunks2 = splitter2.split_text(text)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("CHARACTER TEXT SPLITTER")
+print("-----------------------")
+
+print("Total Chunks:", len(chunks1))
+print(chunks1)
+
+
+print("\nRECURSIVE CHARACTER TEXT SPLITTER")
+print("---------------------------------")
+
+print("Total Chunks:", len(chunks2))
+print(chunks2)
+
+E:\lcclasses>py test.py
+CHARACTER TEXT SPLITTER
+-----------------------
+Total Chunks: 1
+['ABCDEFGHIJKL']
+
+RECURSIVE CHARACTER TEXT SPLITTER
+---------------------------------
+Total Chunks: 3
+['ABCDE', 'FGHIJ', 'KL']
+
+Program 3 — Understanding Custom Separator Priority
+----------------------------------------------------
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+text = "AAA|BBB|CCC|DDD"
+
+
+splitter = RecursiveCharacterTextSplitter(
+    separators=["|", ""],
+    chunk_size=7,
+    chunk_overlap=0,
+    keep_separator=False
+)
+
+
+chunks = splitter.split_text(text)
+
+
+print("TOTAL CHUNKS:", len(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {repr(chunk)}")
+    print("Length:", len(chunk))
+
+E:\lcclasses>py test.py
+TOTAL CHUNKS: 2
+Chunk 1: 'AAA|BBB'
+Length: 7
+Chunk 2: 'CCC|DDD'
+Length: 7
+
+Program 4 — Proving That Recursive Splitting Goes Deeper
+--------------------------------------------------------
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# ORIGINAL TEXT
+# ========================================
+
+text = "AAA|ABCDEFGHIJ|BBB"
+
+
+# ========================================
+# CREATE SPLITTER
+# ========================================
+
+splitter = RecursiveCharacterTextSplitter(
+    separators=["|", ""],
+    chunk_size=5,
+    chunk_overlap=0,
+    keep_separator=False
+)
+
+
+# ========================================
+# SPLIT TEXT
+# ========================================
+
+chunks = splitter.split_text(text)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {repr(chunk)}")
+
+E:\lcclasses>py test.py
+Chunk 1: 'AAA'
+Chunk 2: 'ABCDE'
+Chunk 3: 'FGHIJ'
+Chunk 4: 'BBB'
+
+Program 5 — Understanding Chunk Overlap
+---------------------------------------
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+text = "ABCDEFGHIJKL"
+
+
+splitter = RecursiveCharacterTextSplitter(
+    separators=[""],
+    chunk_size=5,
+    chunk_overlap=2
+)
+
+
+chunks = splitter.split_text(text)
+
+
+print("CHUNK SIZE:", 5)
+print("CHUNK OVERLAP:", 2)
+print("TOTAL CHUNKS:", len(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {chunk}")
+
+Expected Output
+CHUNK SIZE: 5
+CHUNK OVERLAP: 2
+TOTAL CHUNKS: 4
+
+Chunk 1: ABCDE
+Chunk 2: DEFGH
+Chunk 3: GHIJK
+Chunk 4: JKL
+
+Program 6 — Understanding keep_separator
+----------------------------------------
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+text = "AAA|BBB|CCC"
+
+
+splitter = RecursiveCharacterTextSplitter(
+    separators=["|", ""],
+    chunk_size=4,
+    chunk_overlap=0,
+    keep_separator="start"
+)
+
+
+chunks = splitter.split_text(text)
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"Chunk {index}: {repr(chunk)}")
+
+E:\lcclasses>py test.py
+Chunk 1: 'AAA'
+Chunk 2: '|BBB'
+Chunk 3: '|CCC'
+
+Program 7 — Splitting LangChain Document Objects
+-------------------------------------------------
+from langchain_core.documents import Document
+
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# CREATE DOCUMENT
+# ========================================
+
+document = Document(
+    page_content="ABCDEFGHIJKL",
+
+    metadata={
+        "source": "company_policy.txt",
+        "department": "HR"
+    }
+)
+
+
+# ========================================
+# CREATE TEXT SPLITTER
+# ========================================
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=5,
+    chunk_overlap=2,
+    separators=[""],
+    add_start_index=True
+)
+
+
+# ========================================
+# SPLIT DOCUMENT
+# ========================================
+
+chunks = splitter.split_documents(
+    [document]
+)
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("TOTAL CHUNKS:", len(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"\nCHUNK {index}")
+
+    print("CONTENT:", chunk.page_content)
+
+    print("METADATA:", chunk.metadata)
+
+    print("TYPE:", type(chunk).__name__)
+
+Program 8 — Practical Company Policy Document
+----------------------------------------------
+from langchain_core.documents import Document
+
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter
+)
+
+
+# ========================================
+# CREATE SAMPLE COMPANY POLICY DOCUMENT
+# ========================================
+
+document = Document(
+    page_content=(
+        "ATTENDANCE POLICY\n"
+        "Employees must report by 9 AM.\n\n"
+        "LEAVE POLICY\n"
+        "Employees receive 12 casual leaves.\n\n"
+        "WORK FROM HOME\n"
+        "Manager approval is required."
+    ),
+    metadata={
+        "source": "company_policy.txt"
+    }
+)
+
+
+# ========================================
+# CREATE RECURSIVE SPLITTER
+# ========================================
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=60,
+    chunk_overlap=0,
+    separators=["\n\n", "\n", " ", ""]
+)
+
+
+# ========================================
+# SPLIT DOCUMENT
+# ========================================
+
+chunks = splitter.split_documents([document])
+
+
+# ========================================
+# DISPLAY RESULTS
+# ========================================
+
+print("TOTAL CHUNKS:", len(chunks))
+
+
+for index, chunk in enumerate(chunks, start=1):
+
+    print(f"\nCHUNK {index}")
+    print("-" * 30)
+
+    print(chunk.page_content)
+
+    print("LENGTH:", len(chunk.page_content))
+
+    print("SOURCE:", chunk.metadata["source"])
+
+E:\lcclasses>py test.py
+TOTAL CHUNKS: 3
+
+CHUNK 1
+------------------------------
+ATTENDANCE POLICY
+Employees must report by 9 AM.
+LENGTH: 48
+SOURCE: company_policy.txt
+
+CHUNK 2
+------------------------------
+LEAVE POLICY
+Employees receive 12 casual leaves.
+LENGTH: 48
+SOURCE: company_policy.txt
+
+CHUNK 3
+------------------------------
+WORK FROM HOME
+Manager approval is required.
+LENGTH: 44
+SOURCE: company_policy.txt
+
+MCQs
+----
+
+1. What is the main purpose of RecursiveCharacterTextSplitter?
+A. Convert text into embeddings
+B. Divide text using multiple separators recursively
+C. Call an LLM automatically
+D. Store vectors in a database
+
+
+2. Which is the default separator priority?
+A. [" ", "\n", "\n\n", ""]
+B. [".", ",", " "]
+C. ["\n\n", "\n", " ", ""]
+D. ["", " ", "\n"]
+
+
+3. Why is an empty string included in the separator list?
+A. To remove all characters
+B. To generate embeddings
+C. To disable splitting
+D. To allow character-level fallback
+
+4. What happens when a piece is still too large?
+A. The splitter can recursively try remaining separators
+B. The model is trained automatically
+C. All metadata is deleted
+D. The program always stops
+
+
+5. What does split_text() return?
+A. AIMessage
+B. A list of strings
+C. A vector store
+D. A PDF file
+
+
+6. With default length_function=len, how is chunk length measured?
+A. LLM tokens
+B. Number of pages
+C. Python string length
+D. Number of sentences
+
+
+7. What does chunk_overlap specify?
+A. Number of documents
+B. PDF page number
+C. Model temperature
+D. Target repeated content between neighbouring chunks
+
+
+8. Which parameter can preserve the original chunk start position?
+A. add_start_index
+B. is_separator_regex
+C. temperature
+D. model
+
+
+9. Which statement about RecursiveCharacterTextSplitter is correct?
+A. It always understands sentence meaning
+B. It does not need an LLM to split text
+C. It automatically generates embeddings
+D. It guarantees the same number of chunks for every document
+
+
+10. Which class is generally more flexible for documents with mixed text structures?
+A. AIMessage
+B. StrOutputParser
+C. RecursiveCharacterTextSplitter
+D. ChatPromptTemplate
+
+
+Final Answer Key
+1. B
+
+2. C
+
+3. D
+
+4. A
+
+5. B
+
+6. C
+
+7. D
+
+8. A
+
+9. B
+
+10. C
